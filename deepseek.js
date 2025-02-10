@@ -199,7 +199,7 @@ export class example extends plugin {
         }
         
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
-            e.reply('尚无任何对话记录，请使用#bot+你的问题进行第一次对话')
+            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话')
             return
         } else if (isNaN(nowChat) || nowChat >= json[id].messages.length) {
             e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, ''))
@@ -230,7 +230,7 @@ export class example extends plugin {
         }
         
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
-            e.reply('尚无任何对话记录，请使用#bot+你的问题进行第一次对话')
+            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话')
             return
         } else if (isNaN(nowChat) || nowChat >= json[id].messages.length) {
             e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, ''))
@@ -277,7 +277,7 @@ export class example extends plugin {
     }
      
     async help(e) {
-        e.reply(await this.makeForwardMsg('DeepSeek Plugin 使用指南', `1. #bot历史对话 - 拉取目前对话的历史记录\n2. #bot重置对话 - 清除当前对话的聊天记录，重新开启话题\n3. #bot新建/切换/删除对话 - 新建对话，切换到指定对话与删除指定对话，切换或删除对话时请携带指定对话的编号\n4. #bot对话列表 - 列出目前所有的对话目录，并用*标记当前所在对话，列表同时列出对话的第一个提问方便辨别\n5. #bot更改模型 - 修改使用的模型，支持deepseek-reasoner(即R1)和deepseek-chat(即V3)，默认为deepseek-chat\n6. #bot更改提示词 - 修改bot的“人设”，默认为“You are a helpful assistant.”\n7. #bot设置 - 查看目前的设置档，其中的键名分别代表：status - 是否有正在进行的对话；systemPrompt - 系统提示词，决定bot的人设；model - 对话使用的模型名；otherConfig - 进阶设置的参数\n8. #bot更改进阶设置 - 以max_tokens，temperature，top_p，frequency_penalty，presence_penalty的顺序携带新的值来设置这些参数，默认值为4096, 0.7, 1.0, 0.0, 0.0，不了解这些设置的意义请勿更改`));
+        e.reply(await this.makeForwardMsg('DeepSeek Plugin 使用指南', `1. #chat历史对话 - 拉取目前对话的历史记录\n2. #chat重置对话 - 清除当前对话的聊天记录，重新开启话题\n3. #chat新建/切换/删除对话 - 新建对话，切换到指定对话与删除指定对话，切换或删除对话时请携带指定对话的编号\n4. #chat对话列表 - 列出目前所有的对话目录，并用*标记当前所在对话，列表同时列出对话的第一个提问方便辨别\n5. #chat更改模型 - 修改使用的模型，支持deepseek-reasoner(即R1)和deepseek-chat(即V3)，默认为deepseek-chat\n6. #chat更改提示词 - 修改bot的“人设”，默认为“You are a helpful assistant.”\n7. #chat设置 - 查看目前的设置档，其中的键名分别代表：status - 是否有正在进行的对话；systemPrompt - 系统提示词，决定bot的人设；model - 对话使用的模型名；otherConfig - 进阶设置的参数\n8. #chat更改进阶设置 - 以max_tokens，temperature，top_p，frequency_penalty，presence_penalty的顺序携带新的值来设置这些参数，默认值为4096, 0.7, 1.0, 0.0, 0.0，不了解这些设置的意义请勿更改`));
     }
 
     async configOther(e) {
