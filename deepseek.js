@@ -1,19 +1,19 @@
-import plugin from '../../lib/plugins/plugin.js'
-import fs from 'fs'
-import lodash from 'lodash'
+import plugin from '../../lib/plugins/plugin.js';
+import fs from 'fs';
+import lodash from 'lodash';
 import fetch from "node-fetch";
-import cfg from '../../lib/config/config.js'
+import cfg from '../../lib/config/config.js';
 import { segment } from 'oicq';
 
-const dirpath = "data/deepseek"
-var filename = `tempMsg.json`
+const dirpath = "data/deepseek";
+var filename = `tempMsg.json`;
 if (!fs.existsSync(dirpath)) {//如果文件夹不存在
     fs.mkdirSync(dirpath);//创建文件夹
 }
 //如果文件不存在，创建文件
 if (!fs.existsSync(dirpath + "/" + filename)) {
     fs.writeFileSync(dirpath + "/" + filename, JSON.stringify({
-    }))
+    }));
 }
 
 // 每次重载重置status
@@ -26,8 +26,11 @@ for (const id in initJson) {
 }
 fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(initJson, null, "\t"));//写入文件
 
-let apikey = "sk-1145141919810Tadokoro"   //这里填你的apikey
-let id
+//const base_url = 'https://api.deepseek.com/chat/completions';   //这里填你的endpoint
+//const apikey = "sk-1145141919810Tadokoro";   //这里填你的apikey
+const base_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';   //aliyun endpoint
+const apikey = "sk-1145141919810Tadokoro";   //这里填你的apikey
+let id;
 var tempMsg = JSON.parse(`[
     {
       "content": "You are a helpful assistant",
@@ -73,7 +76,7 @@ export class example extends plugin {
                 },
                 {
                     /** 命令正则匹配 */
-                    reg: "^#(bot|chat)(切换|更改)(对话)?.*$", //匹配消息正则,命令正则
+                    reg: "^#(bot|chat)(切换|更改)对话.*$", //匹配消息正则,命令正则
                     /** 执行方法 */
                     fnc: 'changeChat'
                 },
@@ -127,7 +130,7 @@ export class example extends plugin {
                 }
             ]
         })
-    } w
+    } 
     /**
      * 调用chatgpt接口
      * @param e oicq传递的事件参数e
@@ -142,7 +145,7 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
             fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
         }
         delete json[id].messages;
@@ -151,12 +154,12 @@ export class example extends plugin {
 
     async newChat(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -165,7 +168,7 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
         } else {
             tempMsg = JSON.parse(`[
             {
@@ -173,87 +176,88 @@ export class example extends plugin {
               "role": "system"
             }
             ]`);
-            json[id].messages.push(tempMsg)
-            json[id].nowChat = json[id].messages.length - 1
+            json[id].messages.push(tempMsg);
+            json[id].nowChat = json[id].messages.length - 1;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
-        e.reply('已创建对话编号：' + (json[id].nowChat+1))
+        e.reply('已创建对话编号：' + (json[id].nowChat+1));
     }
 
     async changeChat(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
-        let msg = e.msg.trim().replace(/#(bot|chat)(切换|更改)(对话)?( )*/g, '')
-        let nowChat
+        let msg = e.msg.trim().replace(/#(bot|chat)(切换|更改)(对话)?\s*/g, '');
+        let nowChat;
         if (msg=='') {
-            e.reply('未指定切换目标')
-            return
+            e.reply('未指定切换目标');
+            return;
         } else {
-            nowChat = parseInt(msg, 10) - 1
+            nowChat = parseInt(msg, 10) - 1;
         }
         
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
-            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话')
-            return
+            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话');
+            return;
         } else if (isNaN(nowChat) || nowChat >= json[id].messages.length) {
-            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, ''))
-            return
+            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?\s*/g, ''));
+            return;
         } else {
-            json[id].nowChat = nowChat
+            json[id].nowChat = nowChat;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
-        e.reply('已经切换到对话编号：'+(nowChat+1))
+        e.reply('已经切换到对话编号：'+(nowChat+1));
+        this.listChat(e);
     }
 
     async deleteChat(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
-        let msg = e.msg.trim().replace(/#(bot|chat)删除(对话)?( )*/g, '')
-        let nowChat
+        let msg = e.msg.trim().replace(/#(bot|chat)删除(对话)?\s*/g, '');
+        let nowChat;
         if (msg=='') {
-            e.reply('未指定切换目标')
-            return
+            e.reply('未指定切换目标');
+            return;
         } else {
-            nowChat = parseInt(msg, 10) - 1
+            nowChat = parseInt(msg, 10) - 1;
         }
         
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
-            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话')
-            return
+            e.reply('尚无任何对话记录，请使用#chat+你的问题进行第一次对话');
+            return;
         } else if (isNaN(nowChat) || nowChat >= json[id].messages.length) {
-            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, ''))
-            return
+            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?\s*/g, ''));
+            return;
         } else if (json[id].messages.length <= 1) {
-            e.reply('请至少保留一个对话')
-            return
+            e.reply('请至少保留一个对话');
+            return;
         } else {
             json[id].messages.splice(nowChat, 1);
-            json[id].nowChat = 0
+            json[id].nowChat = 0;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
-        e.reply('已经删除对话编号：'+(nowChat+1)+'\n自动将当前对话切换为对话编号1')
+        e.reply('已经删除对话编号：'+(nowChat+1)+'\n自动将当前对话切换为对话编号1');
     }
 
     async listChat(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -262,18 +266,18 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
         }
-        let list = []
+        let list = [];
         for (var i=0;i<json[id].messages.length;i++) {
             if (json[id].messages[i].length>1) {
-                list.push(`[${i===json[id].nowChat?'*':'  '}] ${i+1}. User: ${json[id].messages[i][1].content}\n`)
+                list.push(`[${i===json[id].nowChat?'*':'  '}] ${i+1}. User: ${json[id].messages[i][1].content}\n`);
             } else {
-                list.push(`[${i===json[id].nowChat?'*':'  '}] ${i+1}. 尚未开始对话\n`)
+                list.push(`[${i===json[id].nowChat?'*':'  '}] ${i+1}. 尚未开始对话\n`);
             }
         }
-        let forwardMsg = await this.makeForwardMsg(`目前有对话${json[id].messages.length}组：`, list)
-        await e.reply(forwardMsg)
+        let forwardMsg = await this.makeForwardMsg(`目前有对话${json[id].messages.length}组：`, list);
+        await e.reply(forwardMsg);
     }
      
     async help(e) {
@@ -282,15 +286,15 @@ export class example extends plugin {
 
     async configOther(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
 
         function processInput(input) {
-            const regex = /^#(bot|chat)(修|更)改进阶设置( )*(\d+)( )*(\d+|\d+\.\d+)( )*(\d+|\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)/i;
+            const regex = /^#(bot|chat)(修|更)改进阶设置\s*(\d+)( )*(\d+|\d+\.\d+)( )*(\d+|\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)/i;
             const match = input.match(regex);
 
             if (!match) {
@@ -348,28 +352,28 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': result, nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': result, nowChat: 0 };
         } else {
-            json[id].otherConfig = result
+            json[id].otherConfig = result;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
-        e.reply('修改对话模型啦')
+        e.reply('修改对话模型啦');
 
     }
 
     async configModel(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
-        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(对话)?模型( )*/g, '')
+        id = e.user_id;
+        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(对话)?模型\s*/g, '');
         if (msg !== "deepseek-chat" && msg !== "deepseek-reasoner") {
-            e.reply('错误的模型名，你只能选择deepseek-chat或者deepseek-reasoner')
-            return
+            e.reply(`可能是错误的模型名${msg}，你只能选择deepseek-chat或者deepseek-reasoner`);
+            //return;
         }
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
@@ -379,25 +383,25 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': msg, 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': msg, 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
         } else {
-            json[id].model = msg
+            json[id].model = msg;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
-        e.reply('修改对话模型啦')
+        e.reply('修改对话模型啦');
 
     }
 
     async configPrompt(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
-        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(系统)?提示词?( )*/g, '')
+        id = e.user_id;
+        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(系统)?提示词?\s*/g, '');
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -406,9 +410,9 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': msg, 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': msg, 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
         } else {
-            json[id].systemPrompt = msg
+            json[id].systemPrompt = msg;
             // 遍历 json[id].messages
             for (let i = 0; i < json[id].messages[json[id].nowChat].length; i++) {
                 if (json[id].messages[json[id].nowChat][i].role === "system") {
@@ -420,18 +424,18 @@ export class example extends plugin {
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
-        e.reply('修改系统提示啦')
+        e.reply('修改系统提示啦');
 
     }
 
     async reset(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -440,7 +444,7 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
         } else {
             tempMsg = JSON.parse(`[
             {
@@ -448,33 +452,33 @@ export class example extends plugin {
               "role": "system"
             }
             ]`);
-            json[id].messages[json[id].nowChat] = tempMsg
+            json[id].messages[json[id].nowChat] = tempMsg;
         }
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
-        e.reply('重置聊天对话啦')
+        e.reply('重置聊天对话啦');
 
     }
 
     async history(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
-        let msg = e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, '')
-        let nowChat
+        let msg = e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?\s*/g, '');
+        let nowChat;
         if (msg=='') {
-            nowChat = json[id].nowChat
+            nowChat = json[id].nowChat;
         } else {
-            nowChat = parseInt(msg, 10) - 1
+            nowChat = parseInt(msg, 10) - 1;
         }
         if (isNaN(nowChat) || nowChat >= json[id].messages.length) {
-            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?( )*/g, '')+'\n将返回当前对话历史')
-            nowChat = json[id].nowChat
+            e.reply('非法对话编号或不存在的对话编号：'+e.msg.trim().replace(/#(bot|chat)(对话)?历史(对话)?\s*/g, '')+'\n将返回当前对话历史');
+            nowChat = json[id].nowChat;
         }
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -483,31 +487,31 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
             fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
         } else {
-            tempMsg = json[id].messages[nowChat]
+            tempMsg = json[id].messages[nowChat];
         }
-        let forwardMsg = await this.makeForwardMsg(`会话编号：${nowChat+1}\n目前有历史记录${tempMsg.length}条：`, JSON.stringify(tempMsg))
-        await e.reply(forwardMsg)
+        let forwardMsg = await this.makeForwardMsg(`会话编号：${nowChat+1}\n目前有历史记录${tempMsg.length}条：`, JSON.stringify(tempMsg));
+        await e.reply(forwardMsg);
     }
 
     async chat(e) {
         if (!e.msg) {
-            return
+            return;
         }
         if (e.isGroup && !e.atme) {
-            return
+            return;
         }
-        id = e.user_id
+        id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (json[id].status == 1) {
-            e.reply('有对话正在请求，请稍后')
-            return
+            e.reply('有对话正在请求，请稍后');
+            return;
         }
 
-        e.reply('思考中……')
-        json[id].status = 1
+        e.reply('思考中……');
+        json[id].status = 1;
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
@@ -517,7 +521,7 @@ export class example extends plugin {
               "role": "system"
             }
         ]`);
-            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 }
+            json[id] = { 'messages': [tempMsg], 'status': 0, 'systemPrompt': 'You are a helpful assistant.', 'model': 'deepseek-chat', 'otherConfig': [4096, 0.7, 1.0, 0.0, 0.0], nowChat: 0 };
             fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
         } else {
             tempMsg = JSON.parse(JSON.stringify(json[id].messages[json[id].nowChat]));
@@ -530,7 +534,7 @@ export class example extends plugin {
         }
 
         let res, res2, result, usage;
-        let msg = e.msg.trim().replace(/#(bot|chat)( )*/g, '')
+        let msg = e.msg.trim().replace(/#(bot|chat)\s*/g, '');
         if (tempMsg[tempMsg.length - 1].role == "user") {
             tempMsg.pop();
         }
@@ -549,10 +553,10 @@ export class example extends plugin {
             "top_p": json[id].otherConfig[2],
             "frequency_penalty": json[id].otherConfig[3],
             "presence_penalty": json[id].otherConfig[4],
-        }
+        };
 
         try {
-            res = await fetch('https://api.deepseek.com/chat/completions', {
+            res = await fetch(base_url, {
                 method: "post",
                 maxBodyLength: Infinity,
                 body: JSON.stringify(data),
@@ -563,42 +567,42 @@ export class example extends plugin {
                     'Authorization': 'Bearer ' + apikey
                 }
 
-            })
-            res2 = await res.json()
-            result = res2.choices[0].message
-            usage = res2.usage
+            });
+            res2 = await res.json();
+            result = res2.choices[0].message;
+            usage = res2.usage;
         } catch (err) {
             console.log(err);
             console.log('没有访问成功');
             e.reply('没有访问成功，请重试\n' + err + '\n' + JSON.stringify(res.text()) + '\n' + JSON.stringify(data));
-            json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8")) //读取文件
+            json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8")); //读取文件
             // 遍历 initJson 中的所有项目
-            json[id].status = 0
+            json[id].status = 0;
             fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(initJson, null, "\t"));//写入文件
-            return false
+            return false;
         }
-        let jieguo = (result.reasoning_content ? ('<think>' + result.reasoning_content + '</think>\n-------\n') : '') + result.content + '\n-------\n对话编号：'+json[id].nowChat+'\n模型名：' + res2.model + '\n总计用量：' + usage.total_tokens + '\n提示词token(总/命中/未命中)：' + usage.prompt_tokens + '/' + usage.prompt_cache_hit_tokens + '/' + usage.prompt_cache_miss_tokens + '\n回答token(总/思考/回答)：' + usage.completion_tokens + '/' + ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0) + '/' + (usage.completion_tokens - ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0)) + '\n费用：' + (res2.model == "deepseek-chat" ? ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000) / 7).toFixed(6) + '美元') : ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000) / 7).toFixed(6) + '美元'))
+        let jieguo = (result.reasoning_content ? ('<think>' + result.reasoning_content + '</think>\n-------\n') : '') + result.content + '\n-------\n对话编号：'+(json[id].nowChat+1)+'\n模型名：' + res2.model + '\n总计用量：' + usage.total_tokens + '\n提示词token(总/命中/未命中)：' + usage.prompt_tokens + '/' + usage.prompt_cache_hit_tokens + '/' + usage.prompt_cache_miss_tokens + '\n回答token(总/思考/回答)：' + usage.completion_tokens + '/' + ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0) + '/' + (usage.completion_tokens - ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0)) + '\n费用：' + (res2.model == "deepseek-chat" ? ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000) / 7).toFixed(6) + '美元') : ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000) / 7).toFixed(6) + '美元'))
         //delete result.tool_calls
-        json[id].messages[json[id].nowChat].push(result)
+        json[id].messages[json[id].nowChat].push(result);
         // logger.mark(`[AI回复]${tempMsg}`)
-        e.reply(jieguo, true)
+        e.reply(jieguo, true);
         //console.log(res2.choices[0])
-        json[id].status = 0
+        json[id].status = 0;
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
-        return false
+        return false;
 
     }
 
     async makeForwardMsg(title, msg) {
-        let nickname = Bot.nickname
+        let nickname = Bot.nickname;
         if (this.e.isGroup) {
-            let info = await Bot.pickMember(this.e.group_id, Bot.uin)
-            nickname = info.card ? info.card : info.nickname
+            let info = await Bot.pickMember(this.e.group_id, Bot.uin);
+            nickname = info.card ? info.card : info.nickname;
         }
         let userInfo = {
             user_id: Bot.uin,
             nickname
-        }
+        };
 
         let forwardMsg = [
             {
@@ -609,52 +613,52 @@ export class example extends plugin {
                 ...userInfo,
                 message: msg
             }
-        ]
+        ];
 
         /** 制作转发内容 */
         if (this.e.isGroup) {
-            forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
+            forwardMsg = await this.e.group.makeForwardMsg(forwardMsg);
         } else {
-            forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
+            forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg);
         }
 
         /** 处理描述 */
-        forwardMsg.data = JSON.stringify(forwardMsg.data)
+        forwardMsg.data = JSON.stringify(forwardMsg.data);
         forwardMsg.data = forwardMsg.data
             .replace(/\n/g, '')
             .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-            .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
-        forwardMsg.data = JSON.parse(forwardMsg.data)
+            .replace(/___+/, `<title color="#777777" size="26">${title}</title>`);
+        forwardMsg.data = JSON.parse(forwardMsg.data);
 
-        return forwardMsg
+        return forwardMsg;
     }
 
 }
 
 
 async function getAgent() {
-    let proxyAddress = cfg.bot.proxyAddress
-    if (!proxyAddress) return null
-    if (proxyAddress === 'http://0.0.0.0:0') return null
+    let proxyAddress = cfg.bot.proxyAddress;
+    if (!proxyAddress) return null;
+    if (proxyAddress === 'http://0.0.0.0:0') return null;
 
 
 
     if (HttpsProxyAgent === '') {
         HttpsProxyAgent = await import('https-proxy-agent').catch((err) => {
-            logger.error(err)
-        })
+            logger.error(err);
+        });
 
-        HttpsProxyAgent = HttpsProxyAgent ? HttpsProxyAgent.default : undefined
+        HttpsProxyAgent = HttpsProxyAgent ? HttpsProxyAgent.default : undefined;
     }
 
     if (HttpsProxyAgent) {
-        return new HttpsProxyAgent(proxyAddress)
+        return new HttpsProxyAgent(proxyAddress);
     }
 
-    return null
+    return null;
 }
 async function imgUrlToBase64(url) {
-    let base64Img
+    let base64Img;
     return new Promise(function (resolve, reject) {
         let req = http.get(url, function (res) {
             var chunks = [];
@@ -672,7 +676,7 @@ async function imgUrlToBase64(url) {
                     base64Img
                 });
             });
-        })
+        });
         req.on('error', (e) => {
             resolve({
                 success: false,
@@ -680,8 +684,8 @@ async function imgUrlToBase64(url) {
             });
         });
         req.end();
-    })
+    });
 }
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
