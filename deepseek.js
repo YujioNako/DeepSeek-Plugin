@@ -505,7 +505,7 @@ export class example extends plugin {
         }
         id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
-        if (json[id].status == 1) {
+        if (json.hasOwnProperty(id) && json[id].status == 1) {
             e.reply('有对话正在请求，请稍后');
             return;
         }
