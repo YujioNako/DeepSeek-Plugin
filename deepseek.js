@@ -528,6 +528,7 @@ export class example extends plugin {
             // 遍历 tempMsg 并删除每个对象的 reasoning_content 键
             tempMsg.forEach(item => {
                 if (item.hasOwnProperty("reasoning_content")) {
+                    item.content = item.reasoning_content + item.content; // reasoning_content添加到头
                     delete item.reasoning_content; // 删除 reasoning_content 键
                 }
             });
