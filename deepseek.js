@@ -31,6 +31,7 @@ fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(initJson, null, "\t"))
 const base_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';   //aliyun endpoint
 const apikey = "sk-1145141919810Tadokoro";   //这里填你的apikey
 let id;
+let chatLimit = 3; //允许同时对话的数量
 var tempMsg = JSON.parse(`[
     {
       "content": "You are a helpful assistant",
@@ -106,19 +107,19 @@ export class example extends plugin {
                 },
                 {
                     /** 命令正则匹配 */
-                    reg: "^#(bot|chat)(修|更)改(系统)?提示(词)?.*", //匹配消息正则,命令正则
+                    reg: "^#(bot|chat)((修|更)改|切换)(系统)?提示(词)?.*", //匹配消息正则,命令正则
                     /** 执行方法 */
                     fnc: 'configPrompt'
                 },
                 {
                     /** 命令正则匹配 */
-                    reg: "^#(bot|chat)(修|更)改(对话)?模型.*", //匹配消息正则,命令正则
+                    reg: "^#(bot|chat)((修|更)改|切换)(对话)?模型.*", //匹配消息正则,命令正则
                     /** 执行方法 */
                     fnc: 'configModel'
                 },
                 {
                     /** 命令正则匹配 */
-                    reg: "^#(bot|chat)(修|更)改进阶设置.*", //匹配消息正则,命令正则
+                    reg: "^#(bot|chat)((修|更)改|切换)进阶设置.*", //匹配消息正则,命令正则
                     /** 执行方法 */
                     fnc: 'configOther'
                 },
@@ -227,8 +228,7 @@ export class example extends plugin {
         let msg = e.msg.trim().replace(/#(bot|chat)删除(对话)?\s*/g, '');
         let nowChat;
         if (msg=='') {
-            e.reply('未指定切换目标');
-            return;
+            nowChat = json[id].nowChat;
         } else {
             nowChat = parseInt(msg, 10) - 1;
         }
@@ -281,7 +281,7 @@ export class example extends plugin {
     }
      
     async help(e) {
-        e.reply(await this.makeForwardMsg('DeepSeek Plugin 使用指南', `1. #chat历史对话 - 拉取目前对话的历史记录\n2. #chat重置对话 - 清除当前对话的聊天记录，重新开启话题\n3. #chat新建/切换/删除对话 - 新建对话，切换到指定对话与删除指定对话，切换或删除对话时请携带指定对话的编号\n4. #chat对话列表 - 列出目前所有的对话目录，并用*标记当前所在对话，列表同时列出对话的第一个提问方便辨别\n5. #chat更改模型 - 修改使用的模型，支持deepseek-reasoner(即R1)和deepseek-chat(即V3)，默认为deepseek-chat\n6. #chat更改提示词 - 修改bot的“人设”，默认为“You are a helpful assistant.”\n7. #chat设置 - 查看目前的设置档，其中的键名分别代表：status - 是否有正在进行的对话；systemPrompt - 系统提示词，决定bot的人设；model - 对话使用的模型名；otherConfig - 进阶设置的参数\n8. #chat更改进阶设置 - 以max_tokens，temperature，top_p，frequency_penalty，presence_penalty的顺序携带新的值来设置这些参数，默认值为4096, 0.7, 1.0, 0.0, 0.0，不了解这些设置的意义请勿更改`));
+        e.reply(await this.makeForwardMsg('DeepSeek Plugin 使用指南', `1. #chat历史对话 - 拉取目前对话的历史记录\n2. #chat重置对话 - 清除当前对话的聊天记录，重新开启话题\n3. #chat新建/切换/删除对话 - 新建对话，切换到指定对话与删除指定对话，切换或删除对话时请携带指定对话的编号\n4. #chat对话列表 - 列出目前所有的对话目录，并用*标记当前所在对话，列表同时列出对话的第一个提问方便辨别\n5. #chat更改模型 - 修改使用的模型，支持deepseek-reasoner(即R1)和deepseek-chat(即V3)，默认为deepseek-chat\n6. #chat更改提示词 - 修改bot的“人设”，默认为“You are a helpful assistant.”\n7. #chat设置 - 查看目前的设置档，其中的键名分别代表：status - 正在进行的的对话数目；systemPrompt - 系统提示词，决定bot的人设；model - 对话使用的模型名；otherConfig - 进阶设置的参数\n8. #chat更改进阶设置 - 以max_tokens，temperature，top_p，frequency_penalty，presence_penalty的顺序携带新的值来设置这些参数，默认值为4096, 0.7, 1.0, 0.0, 0.0，不了解这些设置的意义请勿更改`));
     }
 
     async configOther(e) {
@@ -294,7 +294,7 @@ export class example extends plugin {
         id = e.user_id;
 
         function processInput(input) {
-            const regex = /^#(bot|chat)(修|更)改进阶设置\s*(\d+)( )*(\d+|\d+\.\d+)( )*(\d+|\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)/i;
+            const regex = /^#(bot|chat)((修|更)改|切换)进阶设置\s*(\d+)( )*(\d+|\d+\.\d+)( )*(\d+|\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)( )*(-?\d+|-?\d+\.\d+)/i;
             const match = input.match(regex);
 
             if (!match) {
@@ -370,9 +370,9 @@ export class example extends plugin {
             return;
         }
         id = e.user_id;
-        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(对话)?模型\s*/g, '');
+        let msg = e.msg.trim().replace(/#(bot|chat)((修|更)改|切换)(对话)?模型\s*/g, '');
         if (msg !== "deepseek-chat" && msg !== "deepseek-reasoner") {
-            e.reply(`可能是错误的模型名${msg}，你只能选择deepseek-chat或者deepseek-reasoner`);
+            e.reply(`${msg}可能是错误的模型名，DeepSeek官方api仅支持选择deepseek-chat或者deepseek-reasoner；若使用了其他api请忽略该提示`);
             //return;
         }
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
@@ -401,7 +401,7 @@ export class example extends plugin {
             return;
         }
         id = e.user_id;
-        let msg = e.msg.trim().replace(/#(bot|chat)(修|更)改(系统)?提示词?\s*/g, '');
+        let msg = e.msg.trim().replace(/#(bot|chat)((修|更)改|切换)(系统)?提示词?\s*/g, '');
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
             tempMsg = JSON.parse(`[
@@ -505,13 +505,13 @@ export class example extends plugin {
         }
         id = e.user_id;
         var json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8"));//读取文件
-        if (json.hasOwnProperty(id) && json[id].status == 1) {
-            e.reply('有对话正在请求，请稍后');
+        if (json.hasOwnProperty(id) && json[id].status >= chatLimit) {
+            e.reply(`不得有超过${chatLimit}个对话正在请求，请稍后`);
             return;
         }
 
         e.reply('思考中……');
-        json[id].status = 1;
+        json[id].status++;
         fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
 
         if (!json.hasOwnProperty(id)) {//如果json中不存在该用户
@@ -536,6 +536,18 @@ export class example extends plugin {
 
         let res, res2, result, usage;
         let msg = e.msg.trim().replace(/#(bot|chat)\s*/g, '');
+        for (var i = tempMsg.length-1; i >= 0; i--) {
+            if(tempMsg[i].role=="user") {
+                if (tempMsg[i].content==msg) {
+                    for (var j = tempMsg.length-1; j >= i; j--) {
+                        tempMsg.pop();
+                        json[id].messages[json[id].nowChat].pop();
+                    }
+                    e.reply('检测到相同问题，将再次提问');
+                }
+                break;
+            }
+        }
         if (tempMsg[tempMsg.length - 1].role == "user") {
             tempMsg.pop();
         }
@@ -545,7 +557,6 @@ export class example extends plugin {
             }
         }
         tempMsg.push({ "content": msg, "role": "user" });
-        json[id].messages[json[id].nowChat].push({ "content": msg, "role": "user" });
         var data = {
             "model": json[id].model,
             "messages": tempMsg,
@@ -578,18 +589,20 @@ export class example extends plugin {
             e.reply('没有访问成功，请重试\n' + err + '\n' + JSON.stringify(res.text()) + '\n' + JSON.stringify(data));
             json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8")); //读取文件
             // 遍历 initJson 中的所有项目
-            json[id].status = 0;
+            json[id].status = Math.max(json[id].status - 1, 0);
             fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(initJson, null, "\t"));//写入文件
             return false;
         }
-        let jieguo = (result.reasoning_content ? ('<think>' + result.reasoning_content + '</think>\n-------\n') : '') + result.content + '\n-------\n对话编号：'+(json[id].nowChat+1)+'\n模型名：' + res2.model + '\n总计用量：' + usage.total_tokens + '\n提示词token(总/命中/未命中)：' + usage.prompt_tokens + '/' + usage.prompt_cache_hit_tokens + '/' + usage.prompt_cache_miss_tokens + '\n回答token(总/思考/回答)：' + usage.completion_tokens + '/' + ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0) + '/' + (usage.completion_tokens - ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0)) + '\n费用：' + (res2.model == "deepseek-chat" ? ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000 + usage.completion_tokens * 8 / 1000000) / 7).toFixed(6) + '美元') : ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000).toFixed(6) + '元/' + ((usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000 + usage.completion_tokens * 16 / 1000000) / 7).toFixed(6) + '美元'))
+        let jieguo = (result.reasoning_content ? ('<think>' + result.reasoning_content + '</think>\n-------\n') : '') + result.content + '\n-------\n对话编号：'+(json[id].nowChat+1)+'\n模型名：' + res2.model + '\n总计用量：' + usage.total_tokens + '\n提示词token(总/命中/未命中)：' + usage.prompt_tokens + '/' + usage.prompt_cache_hit_tokens + '/' + usage.prompt_cache_miss_tokens + '\n回答token(总/思考/回答)：' + usage.completion_tokens + '/' + ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0) + '/' + (usage.completion_tokens - ((usage && usage.completion_tokens_details && usage.completion_tokens_details.reasoning_tokens) || 0)) + '\n费用：' + ((res2.model == "deepseek-chat"||res2.model == "deepseek-v3") ? ((((usage.prompt_cache_hit_tokens !== undefined||usage.prompt_cache_hit_tokens !== undefined) ? (usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000) : usage.prompt_tokens * 2 /1000000) + usage.completion_tokens * 8 /1000000).toFixed(6) + '元/' + ((((usage.prompt_cache_hit_tokens !== undefined||usage.prompt_cache_hit_tokens !== undefined) ? (usage.prompt_cache_hit_tokens * 0.5 / 1000000 + usage.prompt_cache_miss_tokens * 2 / 1000000) : usage.prompt_tokens * 2 /1000000) + usage.completion_tokens * 8 /1000000)/7).toFixed(6) + '美元') : ((((usage.prompt_cache_hit_tokens !== undefined||usage.prompt_cache_hit_tokens !== undefined) ? (usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000) : usage.prompt_tokens * 4 /1000000) + usage.completion_tokens * 16 /1000000).toFixed(6) + '元/' + ((((usage.prompt_cache_hit_tokens !== undefined||usage.prompt_cache_hit_tokens !== undefined) ? (usage.prompt_cache_hit_tokens * 1 / 1000000 + usage.prompt_cache_miss_tokens * 4 / 1000000) : usage.prompt_tokens * 4 /1000000) + usage.completion_tokens * 16 /1000000)/7).toFixed(6) + '美元'));
         //delete result.tool_calls
+        json = JSON.parse(fs.readFileSync(dirpath + "/" + filename, "utf8")); //读取文件
+        json[id].messages[json[id].nowChat].push({ "content": msg, "role": "user" });
         json[id].messages[json[id].nowChat].push(result);
+        json[id].status = Math.max(json[id].status - 1, 0);
+        fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
         // logger.mark(`[AI回复]${tempMsg}`)
         e.reply(jieguo, true);
         //console.log(res2.choices[0])
-        json[id].status = 0;
-        fs.writeFileSync(dirpath + "/" + filename, JSON.stringify(json, null, "\t"));//写入文件
         return false;
 
     }
